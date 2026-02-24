@@ -5,7 +5,7 @@
 
 /* ── 1. CONFIGURACIÓN ────────────────────────────────────────────────────── */
 const CONFIG = {
-  webhookUrl:      'https://TU-INSTANCIA.n8n.io/webhook/facturas', // 🔧 Cambia aquí tu URL de ngrok o n8n Cloud
+  webhookUrl:      'https://nonexcitatory-lara-manlily.ngrok-free.dev', // 🔧 Cambia aquí tu URL de ngrok o n8n Cloud
   maxFilesPerDay:  10,
   maxFileSizeMB:   10,
   storageKey:      'facturify_quota',
