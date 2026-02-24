@@ -5,10 +5,10 @@
 
 /* ── 1. CONFIGURACIÓN ────────────────────────────────────────────────────── */
 const CONFIG = {
-  webhookUrl: 'https://nonexcitatory-lara-manlily.ngrok-free.dev/webhook/subir-factura',
-  maxFilesPerDay: 10,
-  maxFileSizeMB: 10,
-  storageKey: 'facturify_quota',
+  webhookUrl:      'https://TU-INSTANCIA.n8n.io/webhook/facturas', // 🔧 Cambia aquí tu URL de ngrok o n8n Cloud
+  maxFilesPerDay:  10,
+  maxFileSizeMB:   10,
+  storageKey:      'facturify_quota',
 };
 
 /* ── 2. ESTADO GLOBAL ────────────────────────────────────────────────────── */
@@ -284,15 +284,17 @@ const Uploader = {
 
       try {
         const res = await fetch(CONFIG.webhookUrl, {
-        method: 'POST',
-        body: this.buildPayload(file, i, meta),
-      });
+          method:  'POST',
+          headers: { 'ngrok-skip-browser-warning': 'true' }, // evita intercepción HTML de ngrok
+          body:    this.buildPayload(file, i, meta),
+          // ⚠️ No definir Content-Type — FormData lo gestiona con su boundary
+        });
 
-        console.log("STATUS:", res.status);
-        const text = await res.text();
-        console.log("RESPONSE BODY:", text);
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+          const errorBody = await res.text();
+          console.error(`[Facturify] HTTP ${res.status} →`, errorBody);
+          throw new Error(`HTTP ${res.status}: ${errorBody}`);
+        }
 
         FileUI.setItemStatus(i, 'done');
         successCount++;
