@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga de Facturas · Facturify</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --surface: #111520;
+    --surface-2: #181d2e;
+    --border: #1f2640;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79,142,247,0.18);
+    --accent-2: #a78bfa;
+    --success: #34d399;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --text: #e8eaf2;
+    --text-muted: #6b7594;
+    --text-dim: #3d4566;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-x: hidden;
+  }
+
+  /* Ambient bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(79,142,247,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(167,139,250,0.1) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.35rem 1rem 0.35rem 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .logo-dot {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e8eaf2 30%, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.75rem;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.97rem;
+    font-weight: 300;
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  /* Quota bar */
+  .quota-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
+  .quota-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .quota-icon {
+    width: 18px; height: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .quota-count {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .quota-count span { color: var(--accent); }
+
+  .quota-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+    max-width: 120px;
+  }
+
+  .quota-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    background: var(--bg);
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .dropzone.dragover .dz-icon { transform: scale(1.15) rotate(-5deg); }
+
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dz-icon {
+    width: 52px; height: 52px;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, var(--accent-glow), rgba(167,139,250,0.15));
+    border: 1px solid rgba(79,142,247,0.3);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.3s ease;
+    color: var(--accent);
+  }
+
+  .dz-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--text);
+  }
+
+  .dz-subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .dz-subtitle strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* File list */
+  .file-list {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.65rem 0.875rem;
+    animation: fadeUp 0.25s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .file-item.success { border-color: rgba(52,211,153,0.3); }
+  .file-item.error { border-color: rgba(248,113,113,0.3); }
+  .file-item.uploading::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.3s ease;
+  }
+
+  .file-icon {
+    width: 34px; height: 34px;
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  .file-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-size: 0.87rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+
+  .file-size {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .file-status {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+  }
+
+  .file-status.pending { background: var(--surface); border: 1px solid var(--border); }
+  .file-status.uploading { border: 2px solid var(--accent); animation: spin 1s linear infinite; }
+  .file-status.done { background: rgba(52,211,153,0.15); color: var(--success); font-size: 0.85rem; }
+  .file-status.err { background: rgba(248,113,113,0.15); color: var(--error); font-size: 0.85rem; }
+
+  .file-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 2px;
+    display: flex; align-items: center;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .file-remove:hover { color: var(--error); }
+
+  /* Meta fields */
+  .meta-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.65rem 0.875rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  select option { background: var(--surface); }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* Submit */
+  .submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .file-summary {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+  }
+
+  .file-summary strong { color: var(--text); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.75rem;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.15s;
+    letter-spacing: 0.01em;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-submit::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:active:not(:disabled) { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-submit svg { position: relative; z-index: 1; }
+  .btn-submit span { position: relative; z-index: 1; }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.87rem;
+    max-width: 320px;
+    animation: slideIn 0.3s ease;
+    pointer-events: all;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+
+  .toast.success { border-color: rgba(52,211,153,0.4); }
+  .toast.error { border-color: rgba(248,113,113,0.4); }
+  .toast.warning { border-color: rgba(251,191,36,0.4); }
+
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-dot { background: var(--success); }
+  .toast.error .toast-dot { background: var(--error); }
+  .toast.warning .toast-dot { background: var(--warning); }
+
+  /* Result panel */
+  .result-panel {
+    margin-top: 1.5rem;
+    background: rgba(52,211,153,0.05);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: none;
+  }
+
+  .result-panel.show { display: block; animation: fadeUp 0.3s ease; }
+
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--success);
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-body {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @media (max-width: 520px) {
+    .meta-fields { grid-template-columns: 1fr; }
+    .submit-row { flex-direction: column; align-items: stretch; }
+    .btn-submit { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="logo-badge">
+      <div class="logo-dot">📄</div>
+      Facturify
+    </div>
+    <h1>Carga de<br>Facturas PDF</h1>
+    <p class="subtitle">Sube tus comprobantes fiscales de forma segura. Procesamos y enviamos automáticamente a tu sistema de gestión.</p>
+  </div>
+
+  <div class="card">
+
+    <!-- Quota strip -->
+    <div class="quota-strip">
+      <div class="quota-info">
+        <svg class="quota-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Cuota diaria de subida
+      </div>
+      <div class="quota-bar-wrap">
+        <div class="quota-bar-fill" id="quotaBarFill"></div>
+      </div>
+      <div class="quota-count"><span id="quotaUsed">0</span> / 10</div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple>
+      <div class="dz-icon">
+        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+      </div>
+      <div class="dz-title">Arrastra tus facturas aquí</div>
+      <div class="dz-subtitle">o haz clic para seleccionar · Solo <strong>PDF</strong> · Máx. <strong>10 MB</strong> por archivo</div>
+    </div>
+
+    <!-- File list -->
+    <div class="file-list" id="fileList"></div>
+
+    <!-- Divider + meta -->
+    <div class="divider"></div>
+
+    <div class="meta-fields">
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="email" placeholder="contacto@empresa.com" required>
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select id="category">
+          <option value="">Seleccionar...</option>
+          <option value="factura_compra">Factura de Compra</option>
+          <option value="factura_venta">Factura de Venta</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label>Notas adicionales (opcional)</label>
+        <textarea id="notes" placeholder="Período, proyecto, referencia interna..."></textarea>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="divider"></div>
+    <div class="submit-row">
+      <div class="file-summary" id="fileSummary">No hay archivos seleccionados</div>
+      <button class="btn-submit" id="submitBtn" disabled>
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+        </svg>
+        <span>Enviar facturas</span>
+      </button>
+    </div>
+
+    <!-- Result panel -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-title">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Facturas enviadas con éxito
+      </div>
+      <div class="result-body" id="resultBody"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const WEBHOOK_URL = 'https://TU-INSTANCIA.n8n.io/webhook/facturas'; // 🔧 Cambia aquí
+const MAX_FILES_PER_DAY = 10;
+const MAX_FILE_SIZE_MB = 10;
+const STORAGE_KEY = 'facturify_quota';
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let selectedFiles = [];
+
+// ─── QUOTA HELPERS ────────────────────────────────────────────────────────────
+function getQuota() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { date: today(), count: 0 };
+    const q = JSON.parse(raw);
+    if (q.date !== today()) return { date: today(), count: 0 };
+    return q;
+  } catch { return { date: today(), count: 0 }; }
+}
+
+function setQuota(count) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: today(), count }));
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function updateQuotaUI() {
+  const q = getQuota();
+  const used = q.count;
+  const pct = (used / MAX_FILES_PER_DAY) * 100;
+  document.getElementById('quotaUsed').textContent = used;
+  document.getElementById('quotaBarFill').style.width = pct + '%';
+  document.getElementById('quotaBarFill').style.background =
+    pct >= 100 ? '#f87171' :
+    pct >= 70  ? '#fbbf24' :
+    'linear-gradient(90deg, #4f8ef7, #a78bfa)';
+}
+
+function getRemainingQuota() {
+  return MAX_FILES_PER_DAY - getQuota().count;
+}
+
+// ─── FILE HELPERS ─────────────────────────────────────────────────────────────
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function sanitizeFiles(files) {
+  const remaining = getRemainingQuota();
+  const valid = [];
+  const errors = [];
+
+  Array.from(files).forEach(f => {
+    if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+      errors.push(`"${f.name}" no es un PDF válido.`);
+      return;
+    }
+    if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      errors.push(`"${f.name}" supera ${MAX_FILE_SIZE_MB} MB.`);
+      return;
+    }
+    if (selectedFiles.some(s => s.name === f.name && s.size === f.size)) {
+      errors.push(`"${f.name}" ya está en la lista.`);
+      return;
+    }
+    valid.push(f);
+  });
+
+  if (valid.length + selectedFiles.length > remaining) {
+    const allowed = Math.max(0, remaining - selectedFiles.length);
+    const extra = valid.splice(allowed);
+    errors.push(`Límite diario: solo puedes subir ${remaining} archivo(s) más hoy.`);
+    extra.forEach(f => errors.push(`"${f.name}" no se agregó.`));
+  }
+
+  errors.forEach(e => showToast(e, 'error'));
+  return valid;
+}
+
+// ─── FILE LIST UI ─────────────────────────────────────────────────────────────
+function renderFiles() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+
+  selectedFiles.forEach((file, i) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.id = `file-${i}`;
+    item.innerHTML = `
+      <div class="file-icon">PDF</div>
+      <div class="file-meta">
+        <div class="file-name" title="${file.name}">${file.name}</div>
+        <div class="file-size">${formatBytes(file.size)}</div>
+      </div>
+      <div class="file-status pending" id="status-${i}"></div>
+      <button class="file-remove" onclick="removeFile(${i})" title="Eliminar">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    list.appendChild(item);
+  });
+
+  updateSummary();
+  updateSubmitBtn();
+}
+
+function removeFile(i) {
+  selectedFiles.splice(i, 1);
+  renderFiles();
+}
+
+function updateSummary() {
+  const el = document.getElementById('fileSummary');
+  const n = selectedFiles.length;
+  const total = selectedFiles.reduce((acc, f) => acc + f.size, 0);
+  el.innerHTML = n === 0
+    ? 'No hay archivos seleccionados'
+    : `<strong>${n}</strong> archivo${n > 1 ? 's' : ''} · ${formatBytes(total)}`;
+}
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = selectedFiles.length === 0;
+}
+
+// ─── DROP ZONE ────────────────────────────────────────────────────────────────
+const dz = document.getElementById('dropzone');
+const fi = document.getElementById('fileInput');
+
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('dragover');
+  const newFiles = sanitizeFiles(e.dataTransfer.files);
+  selectedFiles.push(...newFiles);
+  renderFiles();
+  fi.value = '';
+});
+
+fi.addEventListener('change', () => {
+  const newFiles = sanitizeFiles(fi.files);
+  selectedFiles.push(...newFiles);
+  renderFiles();
+  fi.value = '';
+});
+
+// ─── SUBMIT ───────────────────────────────────────────────────────────────────
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const clientName = document.getElementById('clientName')?.value?.trim() || '';
+  const email = document.getElementById('email').value.trim();
+
+  if (!email || !email.includes('@')) { showToast('Correo electrónico inválido.', 'warning'); return; }
+  if (selectedFiles.length === 0) { showToast('No hay archivos para enviar.', 'warning'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Enviando…';
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < selectedFiles.length; i++) {
+    const file = selectedFiles[i];
+    const itemEl = document.getElementById(`file-${i}`);
+    const statusEl = document.getElementById(`status-${i}`);
+
+    // Uploading state
+    itemEl.classList.add('uploading');
+    statusEl.className = 'file-status uploading';
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file, file.name);
+      formData.append('fileName', file.name);
+      formData.append('fileSize', file.size);
+      formData.append('email', email);
+      formData.append('category', document.getElementById('category').value);
+      formData.append('notes', document.getElementById('notes').value.trim());
+      formData.append('uploadDate', new Date().toISOString());
+      formData.append('fileIndex', i + 1);
+      formData.append('totalFiles', selectedFiles.length);
+
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      itemEl.classList.remove('uploading');
+      itemEl.classList.add('success');
+      statusEl.className = 'file-status done';
+      statusEl.textContent = '✓';
+      successCount++;
+
+    } catch (err) {
+      console.error('Error al enviar', file.name, err);
+      itemEl.classList.remove('uploading');
+      itemEl.classList.add('error');
+      statusEl.className = 'file-status err';
+      statusEl.textContent = '✕';
+      failCount++;
+    }
+  }
+
+  // Update quota
+  const q = getQuota();
+  setQuota(q.count + successCount);
+  updateQuotaUI();
+
+  // Result panel
+  const panel = document.getElementById('resultPanel');
+  const body = document.getElementById('resultBody');
+  panel.classList.add('show');
+  body.innerHTML = `
+    ${successCount > 0 ? `✅ <strong>${successCount}</strong> factura${successCount > 1 ? 's' : ''} enviada${successCount > 1 ? 's' : ''} correctamente al flujo n8n.` : ''}
+    ${failCount > 0 ? `<br>⚠️ <strong>${failCount}</strong> archivo${failCount > 1 ? 's' : ''} con error — revisa la consola para más detalles.` : ''}
+    <br>Cuota restante hoy: <strong>${getRemainingQuota()}</strong> / ${MAX_FILES_PER_DAY}.
+  `;
+
+  if (successCount > 0) showToast(`${successCount} factura${successCount > 1 ? 's' : ''} enviada${successCount > 1 ? 's' : ''} con éxito 🎉`, 'success');
+  if (failCount > 0) showToast(`${failCount} archivo${failCount > 1 ? 's' : ''} fallaron`, 'error');
+
+  btn.querySelector('span').textContent = 'Enviar facturas';
+  if (getRemainingQuota() > 0) {
+    selectedFiles = [];
+    renderFiles();
+    btn.disabled = true;
+  } else {
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Cuota agotada';
+    showToast('Has alcanzado el límite de 10 facturas por día.', 'warning');
+  }
+});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div class="toast-dot"></div>${msg}`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease reverse';
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, 4000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updateQuotaUI();
+
+// Disable if quota exhausted on load
+if (getRemainingQuota() === 0) {
+  document.getElementById('dropzone').style.opacity = '0.4';
+  document.getElementById('dropzone').style.pointerEvents = 'none';
+  showToast('Has alcanzado el límite diario de 10 facturas.', 'warning');
+}
+</script>
+</body>
+</html>

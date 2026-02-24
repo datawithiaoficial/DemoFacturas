@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carga de Facturas · Facturify</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="wrapper">
+
+    <!-- ── Header ─────────────────────────────────────── -->
+    <div class="header">
+      <div class="logo-badge">
+        <div class="logo-dot">📄</div>
+        Facturify
+      </div>
+      <h1>Carga de<br>Facturas PDF</h1>
+      <p class="subtitle">
+        Sube tus comprobantes fiscales de forma segura.
+        Procesamos y enviamos automáticamente a tu sistema de gestión.
+      </p>
+    </div>
+
+    <!-- ── Card principal ─────────────────────────────── -->
+    <div class="card">
+
+      <!-- Barra de cuota diaria -->
+      <div class="quota-strip">
+        <div class="quota-info">
+          <svg class="quota-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          Cuota diaria de subida
+        </div>
+        <div class="quota-bar-wrap">
+          <div class="quota-bar-fill" id="quotaBarFill"></div>
+        </div>
+        <div class="quota-count"><span id="quotaUsed">0</span> / 10</div>
+      </div>
+
+      <!-- Zona de arrastrar y soltar -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".pdf,application/pdf" multiple>
+        <div class="dz-icon">
+          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+        </div>
+        <div class="dz-title">Arrastra tus facturas aquí</div>
+        <div class="dz-subtitle">
+          o haz clic para seleccionar · Solo <strong>PDF</strong> · Máx. <strong>10 MB</strong> por archivo
+        </div>
+      </div>
+
+      <!-- Lista de archivos seleccionados -->
+      <div class="file-list" id="fileList"></div>
+
+      <div class="divider"></div>
+
+      <!-- Campos de metadatos -->
+      <div class="meta-fields">
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" placeholder="contacto@empresa.com" required>
+        </div>
+        <div class="field">
+          <label for="category">Categoría</label>
+          <select id="category">
+            <option value="">Seleccionar...</option>
+            <option value="factura_compra">Factura de Compra</option>
+            <option value="factura_venta">Factura de Venta</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="notes">Notas adicionales (opcional)</label>
+          <textarea id="notes" placeholder="Período, proyecto, referencia interna..."></textarea>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Fila de envío -->
+      <div class="submit-row">
+        <div class="file-summary" id="fileSummary">No hay archivos seleccionados</div>
+        <button class="btn-submit" id="submitBtn" disabled>
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          <span>Enviar facturas</span>
+        </button>
+      </div>
+
+      <!-- Panel de resultado -->
+      <div class="result-panel" id="resultPanel">
+        <div class="result-title">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Facturas enviadas con éxito
+        </div>
+        <div class="result-body" id="resultBody"></div>
+      </div>
+
+    </div><!-- /card -->
+  </div><!-- /wrapper -->
+
+  <!-- Contenedor de notificaciones toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
