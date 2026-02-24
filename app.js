@@ -284,9 +284,13 @@ const Uploader = {
 
       try {
         const res = await fetch(CONFIG.webhookUrl, {
-          method: 'POST',
-          body:   this.buildPayload(file, i, meta),
-        });
+        method: 'POST',
+        body: this.buildPayload(file, i, meta),
+      });
+
+        console.log("STATUS:", res.status);
+        const text = await res.text();
+        console.log("RESPONSE BODY:", text);
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
