@@ -5,10 +5,10 @@
 
 /* ── 1. CONFIGURACIÓN ────────────────────────────────────────────────────── */
 const CONFIG = {
-  webhookUrl:      'https://nonexcitatory-lara-manlily.ngrok-free.dev', // 🔧 Cambia aquí tu URL de ngrok o n8n Cloud
-  maxFilesPerDay:  10,
-  maxFileSizeMB:   10,
-  storageKey:      'facturify_quota',
+  webhookUrl: 'https://nonexcitatory-lara-manlily.ngrok-free.dev/webhook/subir-factura',
+  maxFilesPerDay: 10,
+  maxFileSizeMB: 10,
+  storageKey: 'facturify_quota',
 };
 
 /* ── 2. ESTADO GLOBAL ────────────────────────────────────────────────────── */
