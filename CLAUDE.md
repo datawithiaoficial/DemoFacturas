@@ -42,7 +42,7 @@ Todo lo configurable está en **`app.js` → objeto `CONFIG`** (primeras líneas
 
 ```js
 const CONFIG = {
-  webhookUrl:     'https://xxxxx.ngrok-free.dev/webhook/subir-factura',
+  webhookUrl:     'https://nonexcitatory-lara-manlily.ngrok-free.dev/webhook/subir-factura',
   maxFilesPerDay: 10,
   maxFileSizeMB:  10,
   storageKey:     'facturify_quota',
